@@ -25,7 +25,7 @@ const updateData = {
       console.log("Accel: " + updateData.accel);
     }
   },
-  update: (h: HTMLSpanElement) => {
+  update: () => {
     if (updateData.velocity > 0.01) updateData.velocity -= 0.009;
     if (updateData.velocity < -0.005) updateData.velocity += 0.01;
     if (updateData.velocity > -0.005 && updateData.velocity < 0)
@@ -42,8 +42,6 @@ const updateData = {
     // )
     //   updateData.velocity = 0;
     // updateData.velocity += updateData.accel;
-    h.innerText = updateData.velocity.toString();
-
     updateData.updateDirection();
     // console.log("Velocity here ", updateData.velocity);
     // console.log("Accel here ", updateData.accel);
@@ -54,22 +52,26 @@ const updateData = {
   },
 };
 
-const eventHandler = (e: KeyboardEvent) => {
+const upDownHandler = (e: KeyboardEvent) => {
   if (e.key === Keys.UP) {
     if (updateData.accel < 0.05) updateData.accel += 0.01;
   } else if (e.key === Keys.DOWN) {
     if (updateData.accel > -0.02) updateData.accel -= 0.01;
-  } else if (e.key === Keys.LEFT) {
-    updateData.lrDir = -1;
-  } else if (e.key === Keys.RIGHT) {
-    updateData.lrDir = 1;
-  } else updateData.lrDir = 0;
+  }
   if (updateData.velocity < 5 && updateData.velocity > -0.5) {
     console.log("Update Speed", updateData.velocity);
     updateData.velocity += updateData.accel;
   }
   // console.log("Velocity: " + updateData.velocity, "accel:", updateData.accel);
   updateData.updateDirection();
+};
+
+const leftRightHandler = (e: KeyboardEvent) => {
+  if (e.key === Keys.LEFT) {
+    updateData.lrDir = -1;
+  } else if (e.key === Keys.RIGHT) {
+    updateData.lrDir = 1;
+  } else updateData.lrDir = 0;
 };
 
 const renderColorBoxes = (...args: string[]) => {
@@ -90,4 +92,4 @@ const renderColorBoxes = (...args: string[]) => {
   });
 };
 
-export { eventHandler, updateData, renderColorBoxes };
+export { upDownHandler, leftRightHandler, updateData, renderColorBoxes };

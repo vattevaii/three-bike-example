@@ -1,5 +1,10 @@
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { eventHandler, renderColorBoxes, updateData } from "./utils";
+import {
+  leftRightHandler,
+  renderColorBoxes,
+  upDownHandler,
+  updateData,
+} from "./utils";
 import { Color, Mesh } from "three";
 
 const bikeColorsMeshes = [
@@ -11,6 +16,8 @@ const bikeColorsMeshes = [
 ];
 const tires = ["rear_tire_surface", "front_tire_surface"];
 const tire_rims = ["rear_wheel_geometry", "front_rim"];
+const bike_head = "head_stem";
+const bike_body = "Sketchfab_model";
 
 async function renderBikes() {
   const loader = new GLTFLoader();
@@ -30,7 +37,8 @@ async function renderBikes() {
   const update = () => {
     if (gltf) gltf.scene.rotateY(0.1);
   };
-
+  const headObj = gltf.scene.getObjectByName(bike_head);
+  const bikeObj = gltf.scene.getObjectByName(bike_body);
   const tiresObj = tires.map((t) => gltf.scene.getObjectByName(t));
   const rimsObj = tire_rims.map((t) => gltf.scene.getObjectByName(t));
   const bikeColors = bikeColorsMeshes
@@ -41,7 +49,8 @@ async function renderBikes() {
     .filter((d: any) => d instanceof Mesh && d.material.color instanceof Color)
     .map<Color>((d: any) => d.material.color);
 
-  window.addEventListener("keydown", eventHandler);
+  window.addEventListener("keydown", upDownHandler);
+  window.addEventListener("keydown", leftRightHandler);
   const speed = document.getElementById("speed") as HTMLSpanElement;
 
   setInterval(() => {
@@ -50,8 +59,33 @@ async function renderBikes() {
     // if (updateData.lrDir > 0) fTire?.rotateZ(0.01);
     // else if (updateData.lrDir < 0) fTire?.rotateZ(-0.01);
     // else fTire?.rotateZ(Math.sign(fTire.rotation.z) * -0.01);
-    updateData.update(speed);
+    if (headObj && bikeObj) {
+      if (updateData.lrDir < 0) {
+        if (headObj.rotation.z < 0.5) {
+          if (bikeObj.rotation.y > 0) bikeObj.rotateY(-0.02);
+          else bikeObj.rotateY(-0.004);
+          headObj?.rotateZ(0.05);
+        } else if (bikeObj.rotation.y > -0.3) bikeObj.rotateY(-0.01);
+      } else if (updateData.lrDir > 0) {
+        if (headObj.rotation.z > -0.5) {
+          if (bikeObj.rotation.y < 0) bikeObj.rotateY(0.02);
+          else bikeObj.rotateY(0.004);
+          headObj?.rotateZ(-0.05);
+        } else if (bikeObj.rotation.y < 0.3) bikeObj.rotateY(0.01);
+      } else {
+        if (headObj.rotation.z < 0.1 && headObj.rotation.z > -0.1)
+          headObj.rotation.z = 0;
+        if (headObj.rotation.z !== 0)
+          headObj?.rotateZ(Math.sign(headObj?.rotation.z) * -0.1);
+        if (bikeObj.rotation.y < 0.01 && bikeObj.rotation.y > -0.01)
+          bikeObj.rotation.y = 0;
+        if (bikeObj.rotation.y !== 0)
+          bikeObj.rotateY(Math.sign(bikeObj?.rotation.y) * -0.01);
+      }
+    }
+    updateData.update();
     currentSpeed = updateData.velocity;
+    speed.innerText = currentSpeed.toString();
     tiresObj.forEach((tire) => {
       tire?.rotateX(currentSpeed);
     });
